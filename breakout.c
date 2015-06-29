@@ -1,4 +1,3 @@
-
 //
 // breakout.c
 //
@@ -74,7 +73,17 @@ int main(void)
     // keep playing until game over
     while (lives > 0 && bricks > 0)
     {
-        // TODO
+        
+        waitForClick();
+        move(circle,1);
+       // wait for event
+       GActionEvent event = waitForEvent(ACTION_EVENT);
+       GEvent mevent = getNextEvent(MOUSE_EVENT);
+        
+        if (getEventType(mevent) == WINDOW_CLOSED)
+        {
+            break;
+        }
     }
 
     // wait for click before exiting
@@ -90,7 +99,21 @@ int main(void)
  */
 void initBricks(GWindow window)
 {
-    // TODO
+    int i, l = 0, c = 5;
+    char brick_color[5][10] = {"RED","ORANGE","YELLOW","GREEN","CYAN"};
+   while(c--)
+   {
+        for( i = 2 ; i + 35 <= 400; i += 40)
+        {
+        
+            GRect rec = newGRect(i, 50 + l * 15, 35, 10);
+            setColor(rec, brick_color[l]);
+            setFilled(rec, true);
+            add(window, rec);
+        }   
+        
+        l ++;
+    }
 }
 
 /**
@@ -98,8 +121,11 @@ void initBricks(GWindow window)
  */
 GOval initBall(GWindow window)
 {
-    // TODO
-    return NULL;
+    GOval circle = newGOval(190, 290, 20, 20);
+    setColor(circle, "BLACK");
+    setFilled( circle, true);
+    add (window, circle);
+    return circle;
 }
 
 /**
@@ -107,8 +133,11 @@ GOval initBall(GWindow window)
  */
 GRect initPaddle(GWindow window)
 {
-    // TODO
-    return NULL;
+    GRect paddle = newGRect(170,540,60,10);
+    setColor(paddle,"BLACK");
+    setFilled(paddle,true);
+    add(window,paddle);
+    return paddle;
 }
 
 /**
@@ -116,8 +145,17 @@ GRect initPaddle(GWindow window)
  */
 GLabel initScoreboard(GWindow window)
 {
-    // TODO
-    return NULL;
+    GLabel label = newGLabel("1");
+    setFont(label, "GRAY-48");
+    setColor(label,"LIGHTGRAY");
+    //setFilled(label,true);
+    double x = (getWidth(window) - getWidth(label)) / 2;
+    double y = (getHeight(window) - getFontAscent(label)) /2 ;
+    y = y-6;
+    setLocation(label, x, y);
+    add(window,label);
+    
+    return label;
 }
 
 /**
@@ -133,6 +171,7 @@ void updateScoreboard(GWindow window, GLabel label, int points)
     // center label in window
     double x = (getWidth(window) - getWidth(label)) / 2;
     double y = (getHeight(window) - getHeight(label)) / 2;
+    y = y - 6;
     setLocation(label, x, y);
 }
 
