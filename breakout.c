@@ -1,4 +1,3 @@
-
 //
 // breakout.c
 //
@@ -17,6 +16,7 @@
 #include <spl/gevents.h>
 #include <spl/gobjects.h>
 #include <spl/gwindow.h>
+#include <spl/ginteractors.h>
 
 // height and width of game's window in pixels
 #define HEIGHT 600
@@ -58,7 +58,6 @@ int main(void)
 
     // instantiate paddle, centered at bottom of window
     GRect paddle = initPaddle(window);
-
     // instantiate scoreboard, centered in middle of window, just above ball
     GLabel label = initScoreboard(window);
 
@@ -70,12 +69,55 @@ int main(void)
 
     // number of points initially
     int points = 0;
-
+    int vx=2,vy=2;
+    
+    
     // keep playing until game over
+    waitForClick();
     while (lives > 0 && bricks > 0)
     {
-        // TODO
-    }
+        //GEvent event = getNextEvent(MOUSE_EVENT);    
+        
+        move(ball,vx,vy);
+        updateScoreboard(window, label, points);
+       
+        if (getX(ball) + getWidth(ball) >= getWidth(window))
+        {
+            vx = -vx;
+        }
+        else if (getX(ball) <= 0)
+        {
+            vx= -vx;
+        }
+        GObject g = detectCollision(window,ball);
+        if( g!=NULL  )
+        {    
+            if(g != label)
+            {
+                if(g!=paddle)
+                {
+                    removeGWindow(window, g);           
+                    vy=-vy;
+                    bricks--;
+                    points++;
+                }
+                else
+                    vy=-vy;
+               
+            }
+        }
+        if (getY(ball) + getHeight(ball) >= getHeight(window))
+        {
+            vy = -vy;
+        }
+        else if (getY(ball) <= 0)
+        {
+            vy= -vy;
+        }
+
+
+        pause(10);
+     }
 
     // wait for click before exiting
     waitForClick();
@@ -90,7 +132,21 @@ int main(void)
  */
 void initBricks(GWindow window)
 {
-    // TODO
+    int i, l = 0, c = 5;
+    char brick_color[5][10] = {"RED","ORANGE","YELLOW","GREEN","CYAN"};
+   while(c--)
+   {
+        for( i = 2 ; i + 35 <= 400; i += 40)
+        {
+        
+            GRect rec = newGRect(i, 50 + l * 15, 35, 10);
+            setColor(rec, brick_color[l]);
+            setFilled(rec, true);
+            add(window, rec);
+        }   
+        
+        l ++;
+    }
 }
 
 /**
@@ -98,8 +154,11 @@ void initBricks(GWindow window)
  */
 GOval initBall(GWindow window)
 {
-    // TODO
-    return NULL;
+    GOval circle = newGOval(190, 290, 20, 20);
+    setColor(circle, "BLACK");
+    setFilled( circle, true);
+    add (window, circle);
+    return circle;
 }
 
 /**
@@ -107,8 +166,11 @@ GOval initBall(GWindow window)
  */
 GRect initPaddle(GWindow window)
 {
-    // TODO
-    return NULL;
+    GRect paddle = newGRect(170,540,60,10);
+    setColor(paddle,"BLACK");
+    setFilled(paddle,true);
+    add(window,paddle);
+    return paddle;
 }
 
 /**
@@ -116,8 +178,18 @@ GRect initPaddle(GWindow window)
  */
 GLabel initScoreboard(GWindow window)
 {
-    // TODO
-    return NULL;
+    GLabel label = newGLabel("1");
+    setFont(label, "GRAY-48");
+    setColor(label,"LIGHTGRAY");
+    sendForward(label);
+    //setFilled(label,true);
+    double x = (getWidth(window) - getWidth(label)) / 2;
+    double y = (getHeight(window) - getFontAscent(label)) /2 ;
+    y = y-6;
+    setLocation(label, x, y);
+    add(window,label);
+    
+    return label;
 }
 
 /**
@@ -133,6 +205,7 @@ void updateScoreboard(GWindow window, GLabel label, int points)
     // center label in window
     double x = (getWidth(window) - getWidth(label)) / 2;
     double y = (getHeight(window) - getHeight(label)) / 2;
+    y = y - 6;
     setLocation(label, x, y);
 }
 
@@ -155,6 +228,7 @@ GObject detectCollision(GWindow window, GOval ball)
     object = getGObjectAt(window, x, y);
     if (object != NULL)
     {
+        
         return object;
     }
 
