@@ -69,55 +69,88 @@ int main(void)
 
     // number of points initially
     int points = 0;
-    int vx=2,vy=2;
+    double vx=1.5,vy=3.0;
     
-    
+    GEvent event=NULL;
     // keep playing until game over
     waitForClick();
     while (lives > 0 && bricks > 0)
     {
-        //GEvent event = getNextEvent(MOUSE_EVENT);    
-        
-        move(ball,vx,vy);
+            
+        // Scoreboard
         updateScoreboard(window, label, points);
-       
-        if (getX(ball) + getWidth(ball) >= getWidth(window))
+        
+        // move ball
+        move(ball, vx, vy);
+
+        pause(10);
+        
+        // check for mouse event.
+        GEvent event = getNextEvent(MOUSE_EVENT);
+        
+        // Lock the paddle X to the cursor.
+        if (event != NULL)
         {
-            vx = -vx;
+            // if the event was movement
+            if (getEventType(event) == MOUSE_MOVED)
+            {
+                // ensure paddle follows top cursor
+                double x = getX(event) - getWidth(paddle) / 2;
+                double y = 500;
+                setLocation(paddle, x, y);
+            }
         }
-        else if (getX(ball) <= 0)
+        
+        
+        GObject object = detectCollision(window, ball);
+        
+        if (object != NULL)
+        {
+            // If the ball hits the paddle.
+            if (object == paddle)
+            {
+                vy = -vy;
+            }
+            
+            // If the ball hits a block. Remove block, add a point, decrement count and bounce.
+            else if (strcmp(getType(object), "GRect") == 0)
+            {
+                removeGWindow(window, object);
+                vy = -vy;
+                points++;
+                bricks--;                
+            }
+        }
+        
+        // If the ball hits the right wall.
+        if (getX(ball) + getWidth(ball) >= getWidth(window))
         {
             vx= -vx;
         }
-        GObject g = detectCollision(window,ball);
-        if( g!=NULL  )
-        {    
-            if(g != label)
-            {
-                if(g!=paddle)
-                {
-                    removeGWindow(window, g);           
-                    vy=-vy;
-                    bricks--;
-                    points++;
-                }
-                else
-                    vy=-vy;
-               
-            }
+        
+        // If the ball hits the left wall.
+        if (getX(ball) <= 0)
+        {
+            vx = -vx;
         }
-        if (getY(ball) + getHeight(ball) >= getHeight(window))
+        
+        // If the ball hits the top wall.
+        if (getY(ball) <= 0)
         {
             vy = -vy;
         }
-        else if (getY(ball) <= 0)
+        
+        // If the ball hits the bottom. Remove a life. Start over.
+        if (getY(ball) + getHeight(ball) >= getHeight(window))
         {
-            vy= -vy;
+            lives--;
+            //move ball to start
+            setLocation(ball, 190, 200);
+            //move paddle to start
+            setLocation(paddle, 160, 500);
+            waitForClick();
         }
-
-
-        pause(10);
-     }
+    }
 
     // wait for click before exiting
     waitForClick();
@@ -134,8 +167,8 @@ void initBricks(GWindow window)
 {
     int i, l = 0, c = 5;
     char brick_color[5][10] = {"RED","ORANGE","YELLOW","GREEN","CYAN"};
-   while(c--)
-   {
+    while(c--)
+    {
         for( i = 2 ; i + 35 <= 400; i += 40)
         {
         
@@ -145,7 +178,7 @@ void initBricks(GWindow window)
             add(window, rec);
         }   
         
-        l ++;
+        l++;
     }
 }
 
@@ -178,7 +211,7 @@ GRect initPaddle(GWindow window)
  */
 GLabel initScoreboard(GWindow window)
 {
-    GLabel label = newGLabel("1");
+    GLabel label = newGLabel("0");
     setFont(label, "GRAY-48");
     setColor(label,"LIGHTGRAY");
     sendForward(label);
@@ -228,7 +261,6 @@ GObject detectCollision(GWindow window, GOval ball)
     object = getGObjectAt(window, x, y);
     if (object != NULL)
     {
-        
         return object;
     }
 
