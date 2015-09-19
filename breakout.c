@@ -32,7 +32,7 @@
 #define RADIUS 10
 
 // lives
-#define LIVES 3
+#define LIVES 100
 
 // prototypes
 void initBricks(GWindow window);
