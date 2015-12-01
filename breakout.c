@@ -32,8 +32,7 @@
 #define RADIUS 10
 
 // lives
-#define LIVES 100
-
+#define LIVES 3
 // prototypes
 void initBricks(GWindow window);
 GOval initBall(GWindow window);
@@ -46,7 +45,6 @@ int main(void)
 {
     // seed pseudorandom number generator
     srand48(time(NULL));
-
     // instantiate window
     GWindow window = newGWindow(WIDTH, HEIGHT);
 
@@ -58,16 +56,14 @@ int main(void)
 
     // instantiate paddle, centered at bottom of window
     GRect paddle = initPaddle(window);
-    // instantiate scoreboard, centered in middle of window, just above ball
-    GLabel label = initScoreboard(window);
-
     // number of bricks initially
     int bricks = COLS * ROWS;
 
     // number of lives initially
     int lives = LIVES;
-
-    // number of points initially
+    
+    GLabel label = initScoreboard(window);
+    
     int points = 0;
     double vx=1.5,vy=3.0;
     
@@ -76,13 +72,8 @@ int main(void)
     waitForClick();
     while (lives > 0 && bricks > 0)
     {
-            
-        // Scoreboard
-        updateScoreboard(window, label, points);
-        
         // move ball
         move(ball, vx, vy);
-
         pause(10);
         
         // check for mouse event.
@@ -96,11 +87,11 @@ int main(void)
             {
                 // ensure paddle follows top cursor
                 double x = getX(event) - getWidth(paddle) / 2;
-                double y = 500;
+                double y = 540;
+                if(x+getWidth(paddle) < getWidth(window ) && x>0)
                 setLocation(paddle, x, y);
             }
         }
-        
         
         GObject object = detectCollision(window, ball);
         
@@ -109,7 +100,7 @@ int main(void)
             // If the ball hits the paddle.
             if (object == paddle)
             {
-                vy = -vy;
+                    vy = -vy;
             }
             
             // If the ball hits a block. Remove block, add a point, decrement count and bounce.
@@ -119,10 +110,13 @@ int main(void)
                 vy = -vy;
                 points++;
                 bricks--;                
+                updateScoreboard(window, label, points);
             }
         }
         
         // If the ball hits the right wall.
+        
+       
         if (getX(ball) + getWidth(ball) >= getWidth(window))
         {
             vx= -vx;
@@ -147,10 +141,26 @@ int main(void)
             //move ball to start
             setLocation(ball, 190, 200);
             //move paddle to start
-            setLocation(paddle, 160, 500);
+            setLocation(paddle, 70, 540);
+            if(lives)
             waitForClick();
         }
+        
     }
+    
+    // Displaing Message
+    if (lives && bricks == 0)
+       setLabel(label,"You WON ! :)");
+    else
+       setLabel(label,"No Lives Left :(");
+        
+    setColor(label, "CYAN");    
+    // center label in window
+    double x = (getWidth(window) - getWidth(label)) / 2;
+    double y = (getHeight(window) - getHeight(label)) / 2;
+    y = y - 6;
+    setLocation(label, x, y);
+
 
     // wait for click before exiting
     waitForClick();
@@ -212,16 +222,10 @@ GRect initPaddle(GWindow window)
 GLabel initScoreboard(GWindow window)
 {
     GLabel label = newGLabel("0");
-    setFont(label, "GRAY-48");
-    setColor(label,"LIGHTGRAY");
-    sendForward(label);
-    //setFilled(label,true);
-    double x = (getWidth(window) - getWidth(label)) / 2;
-    double y = (getHeight(window) - getFontAscent(label)) /2 ;
-    y = y-6;
-    setLocation(label, x, y);
-    add(window,label);
-    
+    setFont(label, "SansSerif-50");
+    setColor(label, "C0C0C0");
+    add(window, label);
+    setLocation(label, 185, 300);
     return label;
 }
 
@@ -230,11 +234,10 @@ GLabel initScoreboard(GWindow window)
  */
 void updateScoreboard(GWindow window, GLabel label, int points)
 {
+    char score[2];
     // update label
-    char s[12];
-    sprintf(s, "%i", points);
-    setLabel(label, s);
-
+    sprintf(score,"%d",points);
+    setLabel(label,score);
     // center label in window
     double x = (getWidth(window) - getWidth(label)) / 2;
     double y = (getHeight(window) - getHeight(label)) / 2;
